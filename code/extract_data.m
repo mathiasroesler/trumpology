@@ -7,7 +7,7 @@ function data = extract_data(folder_name, num_coeffs)
 %          -num_coeffs, int, number of coefficiants to extract using the
 %          mfcc.
 %   Output: -data, matrix Lxnum_coeffs, contains L frames and num_coeffs
-%   coefficients that are extracted using a mfcc. 
+%           coefficients that are extracted using a mfcc. 
 
 dir_contents = dir(folder_name); % Structure containing all the files in the folder
 data = [];    % Training data
