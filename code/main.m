@@ -3,79 +3,61 @@ clear all
 close all
 
 % Global variables
-num_coeffs = 12; % Number of coefficiants for the mfcc
-test_nb = 6; % Test number 1: Baldwin, 2: Di domenico, 3: Fallon, 4: Noah, 5: Obama, 6: Trump
-valid_nb = 1; % Validation number 1: Trump, 2: Obama
+nb_coeffs = 12; % Number of coefficiants for the mfcc 
+set_choice = 0; % Set choice 0: validation sets, 1: testing sets
+corpora = ["imitators", "others", "speeches", "trump"];
+people = ["baldwin", "colbert", "clinton", "";
+          "di_domenico", "meyers", "macron", "";
+          "fallon", "supercarlin", "obama", "";
+          "noah", "veitch", "pelosi", ""];
+      
+corpus_nb = 2; % Choice of corpus
+person_nb = 1; % Choice of person
 
-% max_num_coeffs = 30;
-% d = zeros(1, max_num_coeffs);
-max_testers = 6;
-d = zeros(1, max_testers);
-
-% for num_coeffs = 2:max_num_coeffs+1
 % Load the training set
-train_data = extract_data('../data/trump/train', num_coeffs);
+train_data = extract_data('../data/train', nb_coeffs);
 
-%     % Load validation set
-%     switch valid_nb
-%         case 1
-%             % Trump
-%             valid_data = extract_data('../data/trump/valid', num_coeffs);
-%
-%         case 2
-%             % Obama
-%             valid_data = extract_data('../data/obama/valid', num_coeffs);
-%
-%     end
-
-for test_nb = 1:6
-    % Load testing set depending on the imitator number
-    switch test_nb
+for corpus_nb = 1:4
+    % for person_nb = 1:4
+    switch set_choice
+        case 0
+            % Load validation sets
+            set = 'valid';
+            corpus = corpora(corpus_nb);
+            
+            valid_data = extract_data(strcat('../data/', set, '/', corpus), nb_coeffs);
+            
         case 1
-            % Baldwin
-            test_data = extract_data('../data/baldwin/test', num_coeffs);
+            % Load testing sets
+            set = 'test';
+            corpus = corpora(corpus_nb);
+            person = people(person_nb, corpus_nb);
             
-        case 2
-            % Di Domenico
-            test_data = extract_data('../data/di_domenico/test', num_coeffs);
-            
-        case 3
-            % Fallon
-            test_data = extract_data('../data/fallon/test', num_coeffs);
-            
-        case 4
-            % Noah
-            test_data = extract_data('../data/noah/test', num_coeffs);
-            
-        case 5
-            % Obama
-            test_data = extract_data('../data/obama/test', num_coeffs);
-        case 6
-            % Trump
-            test_data = extract_data('../data/trump/test', num_coeffs);
+            test_data = extract_data(strcat('../data/', set, '/', corpus, '/', person), nb_coeffs);
             
     end
+    % Distance calculation for the validation sets
+    d_valid = mean(bhattacharyya(train_data, valid_data));
     
+    % Plot for the  validation sets
+    plot(corpus_nb, d_valid, '.', 'MarkerSize', 22); hold on; grid on;
     
-    % % Distance calculation for the validation sets
-    % d_valid = mean(bhattacharyya(train_data, valid_data));
-    % d(num_coeffs-1) = d_valid;
+    %     % Distance calculation for the testing sets
+    %     d_test = mean(bhattacharyya(train_data, test_data));
+
     
-    % Distance calculation for the testing sets
-    d_test = mean(bhattacharyya(train_data, test_data));
+    %     % Plot for the testing sets
+    %     plot(person_nb, d_test, '.', 'MarkerSize', 22); hold on; grid on;
     
-    plot(test_nb, d_test, '.', 'MarkerSize', 22); hold on; grid on;
 end
 
-% % Plot for the validation sets
-% plot(2:max_num_coeffs+1, d, 'b'); hold on; grid on;
-% plot(2:max_num_coeffs+1, f.d, 'k');
-% plot(12, d(11), 'b.', 'MarkerSize', 22);
-% plot(12, f.d(11), 'k.', 'MarkerSize', 22);
-% legend('Trump validation set', 'Obama validation set');
-% xlabel('Nombre de coefficients'); ylabel('Distance de Bhattacharyya');
+% Legend and labels for the validation sets
+xlabel('Corpus'); ylabel('Distance de Bhattacharyya');
+legend(corpora);
 
-% Plot for the testing sets
-xlabel('Personne'); ylabel('Distance de Bhattacharyya');
-legend('Baldwin', 'Di Domenico', 'Fallon', 'Noah', 'Obama', 'Trump', 'Location', 'Best');
+% % Legend and labels for testing sets
+% xlabel('Personne'); ylabel('Distance de Bhattacharyya');
+% legend(people(:, corpus_nb);
+
+
 
