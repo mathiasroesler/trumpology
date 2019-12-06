@@ -14,6 +14,6 @@ p_var = var(p_data);    % Variance of p_data
 q_mean = mean(q_data);  % Mean of q_data
 q_var = var(q_data);    % Variance of p_data
 
-d = 0.25*log(0.25*(p_var./q_var + q_var./p_var + 2)) + 0.25*(((p_mean-q_mean).^2)./(p_var + q_var));
+d = 0.25*log(0.25*(p_var./(q_var+eps) + q_var./p_var + 2)) + 0.25*(((p_mean-q_mean).^2)./(p_var + q_var));
 end
 

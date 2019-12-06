@@ -1,6 +1,6 @@
 close all, clear all, clc ;
 
-%% Chargement des données :
+%% Chargement des donnï¿½es :
 
 %-----------------Train----------------------
 
@@ -47,17 +47,17 @@ Features_Test = [];
 Labels_Test = [];
 
 for n=1:length(Class_Train)
-    [a,g] = lpc(Base_Train{n,1},p);
+    [a,~] = lpc(Base_Train{n,1},p);
     Features_Train = [Features_Train; (a(1,2:end)-mean(a(1,2:end)))/var(a(1,2:end))];
     Labels_Train = [Labels_Train; Class_Train{n,1}];
 end
 
 for n=1:length(Class_Test)
-    [a,g] = lpc(Base_Test{n,1},p);
+    [a,~] = lpc(Base_Test{n,1},p);
     Features_Test = [Features_Test; (a(1,2:end)-mean(a(1,2:end)))/var(a(1,2:end))];
     Labels_Test = [Labels_Test; Class_Test{n,1}];
 end
-clear a g n;
+clear a n;
 
 save Features_Train.dat Features_Train -ascii
 save Features_Test.dat Features_Test -ascii
