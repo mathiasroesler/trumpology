@@ -10,7 +10,7 @@ dir_Train = dir(fullfile(path_Train));
 Class_Train = cell(0,2);
 Base_Train = cell(0,1);
 for n = 3:length(dir_Train)
-    Class_Train{end+1,1} = 1;
+    Class_Train{end+1,1} = 5;
     Class_Train{end,2} = "trump";
     Base_Train{end+1,1} = audioread(strcat(dir_Train(n).folder,'/',dir_Train(n).name));
 end
@@ -66,5 +66,30 @@ save Labels_Test.dat Labels_Test -ascii
 
 %% Distance Bhatta
 
+Bhatta = [];
+
+for class = 1:6
+    ind = Labels_Test==class;
+    [row,~] = find(ind);
+    group = Features_Test(row,:);
+    Bhatta = [Bhatta; bhattacharyya(group, Features_Train)];
+end
+
+corpora = ["french", "imitators", "others", "speeches", "trump", "women"];
+people = ["chirac", "hollande", "macron", "sarkozy","di_dpmenico", "fallon","noah", "meyers", "supercarlin", "veitch", "omama", "sanders", "schiff","trump", "harris", "pelosi", "warren"];
 
 
+fig=figure();
+for class=1:6
+    plot(1:16,Bhatta(class,:),'*--');
+    legend(corpora, 'Location', 'Best')
+    hold on;
+end
+title("Resultats utilisant LPC16 features et dist Bhatta");
+
+%% Modification du codage de classe pour neurones :
+
+
+%% Frame linear predictive coding spectrum 
+
+ 
