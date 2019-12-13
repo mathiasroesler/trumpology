@@ -30,24 +30,26 @@ train_data = extract_data(strcat(dir, '/train'), coeffs_nb);
 for corpus_nb = 1:length(corpora)
         switch set_choice
             case 0
-                % Load validation set
+                % Load validation set and extract features
                 set = 'valid';
                 corpus = corpora(corpus_nb);
                 
-                valid_data = extract_data(strcat('../data/', set, '/', corpus), coeffs_nb);
-                distance(corpus_nb) = sqrt(sum((mean(train_data) - mean(valid_data)).^2));
+                valid_data = extract_data(strcat(dir, '/', set, '/', corpus), coeffs_nb);
+                
+                distance(corpus_nb) = mean(bhattacharyya(train_data, valid_data)); %sqrt(sum((mean(train_data) - mean(valid_data)).^2));
                 
             case 1
                 for person_nb = 1:size(people, 1)
-                    % Load testing set
+                    % Load testing set and extract features
                     set = 'test';
                     corpus = corpora(corpus_nb);
                     person = people(person_nb, corpus_nb);
                 
-                    test_data = extract_data(strcat('../data/', set, '/', corpus, '/', person), coeffs_nb);
+                    test_data = extract_data(strcat(dir, '/', set, '/', corpus, '/', person), coeffs_nb);
+                                    
                     distance(corpus_nb, person_nb) = mean(bhattacharyya(train_data, test_data));
                     
                 end
+                
         end
 end
-

@@ -39,57 +39,94 @@ for n = 4:length(dir_Test)
 end
 clear path_Test dir_Test dir_Test_class dir_Test_class_ex n p q;
 
-%% Extraction features LPC 16
-p=16;
-Features_Train = [];
-Labels_Train = [];
-Features_Test = [];
-Labels_Test = [];
+%% Convert to Mono:
+Base_Train_Mono = cell(length(Base_Train),1);
+Base_Test_Mono = cell(length(Base_Test),1);
 
-for n=1:length(Class_Train)
-    [a,~] = lpc(Base_Train{n,1},p);
-    Features_Train = [Features_Train; (a(1,2:end)-mean(a(1,2:end)))/var(a(1,2:end))];
-    Labels_Train = [Labels_Train; Class_Train{n,1}];
+for i =1:length(Base_Train)
+    Base_Train_Mono{i} = Base_Train{i}(:,1) + Base_Train{i}(:,2);
+    peakAmp = max(abs(Base_Train_Mono{i}));
+    Base_Train_Mono{i} = Base_Train_Mono{i}/peakAmp;
+    
+    peakL = max(abs(Base_Train{i}(:,1)));
+    peakR = max(abs(Base_Train{i}(:,2)));
+    maxPeak = max([peakL peakR]);
+    Base_Train_Mono{i} = Base_Train_Mono{i}*maxPeak;
 end
 
-for n=1:length(Class_Test)
-    [a,~] = lpc(Base_Test{n,1},p);
-    Features_Test = [Features_Test; (a(1,2:end)-mean(a(1,2:end)))/var(a(1,2:end))];
-    Labels_Test = [Labels_Test; Class_Test{n,1}];
-end
-clear a n;
-
-save Features_Train.dat Features_Train -ascii
-save Features_Test.dat Features_Test -ascii
-save Labels_Train.dat Labels_Train -ascii
-save Labels_Test.dat Labels_Test -ascii
-
-%% Distance Bhatta
-
-Bhatta = [];
-
-for class = 1:6
-    ind = Labels_Test==class;
-    [row,~] = find(ind);
-    group = Features_Test(row,:);
-    Bhatta = [Bhatta; bhattacharyya(group, Features_Train)];
+for i = 1:length(Base_Test)
+    Base_Test_Mono{i} = Base_Test{i}(:,1) + Base_Test{i}(:,2);
+    peakAmp = max(abs(Base_Test_Mono{i}));
+    Base_Test_Mono{i} = Base_Test_Mono{i}/peakAmp;
+    
+    peakL = max(abs(Base_Test{i}(:,1)));
+    peakR = max(abs(Base_Test{i}(:,2)));
+    maxPeak = max([peakL peakR]);
+    Base_Test_Mono{i} = Base_Test_Mono{i}*maxPeak;
 end
 
-corpora = ["french", "imitators", "others", "speeches", "trump", "women"];
-people = ["chirac", "hollande", "macron", "sarkozy","di_dpmenico", "fallon","noah", "meyers", "supercarlin", "veitch", "omama", "sanders", "schiff","trump", "harris", "pelosi", "warren"];
+clear maxPeak peakL peakR peakAmp i;
 
-
-fig=figure();
-for class=1:6
-    plot(1:16,Bhatta(class,:),'*--');
-    legend(corpora, 'Location', 'Best')
-    hold on;
+%% Hamming window :
+w = hamming(3000);
+for i=1:length(Base_Train)
+    Base_Train{i,1}(:,1) = conv(Base_Train{i,1}(:,1),w,"same");
+    Base_Train{i,1}(:,2) = conv(Base_Train{i,1}(:,2),w,"same");
+    Base_Train_Mono{i} = conv(Base_Train_Mono{i},w,"same");
 end
-title("Resultats utilisant LPC16 features et dist Bhatta");
 
-%% Modification du codage de classe pour neurones :
+for i=1:length(Base_Test)
+    Base_Test{i,1}(:,1) = conv(Base_Test{i,1}(:,1),w,"same");
+    Base_Test{i,1}(:,2) = conv(Base_Test{i,1}(:,2),w,"same");
+    Base_Test_Mono{i} = conv(Base_Test_Mono{i},w,"same");
+end
 
+%% LPC Training :
+Fe = 44100;
+p = 16;
+TimeFrame = 900; %nb de points fenêtre pour lpc (20ms)
+Overlapp = 450; %(10ms)
+LPC_mean = [];
 
-%% Frame linear predictive coding spectrum 
+for t =1:length(Class_Train)
+    Time = round(length(Base_Train_Mono{t})/2);
+    LPC = [];
+    %{
+On part de la moitié du signal, sur 1s on prend 20 échantillons de 900pts
+(=20ms) avec un overlapping de 10ms. Au total on aura échantilloné 400ms. Pour chacun de ses échantillon in calcul la LPC16
+    %}
+    for i = 1:20
+        [a,~] = lpc(Base_Train_Mono{t}(Time+(i-1)*Overlapp:Time+TimeFrame+i*Overlapp),p);
+        LPC = [LPC ;(a(1,1:end)-mean(a(1,1:end)))/var(a(1,1:end))];
+    end
+    LPC_mean = [LPC_mean ; mean(LPC)];
+end
 
+clear i t a LPC;
+
+%% Reconnaissance :
+LPC_Test = cell(length(Class_Test),4);
+
+for t=1:length(Class_Test)
+    Time = round(length(Base_Test_Mono{t})/3);
+    LPC = [];
+    for i = 1:20
+        [a,~] = lpc(Base_Test_Mono{t}(Time+(i-1)*Overlapp:Time+TimeFrame+i*Overlapp),p);
+        LPC = [LPC ;(a(1,1:end)-mean(a(1,1:end)))/var(a(1,1:end))];
+    end
+   LPC_Test{t,1} = mean(LPC);
+   LPC_Test{t,2} = Class_Test{t,3};
+   LPC_Test{t,3} = Class_Test{t,2};
+   dist = 0;
+   for z =1:length(Base_Train)
+       dist = dist + sqrt(sum((LPC_Test{t,1}-LPC_mean(z,:)).^2));
+   end
+   LPC_Test{t,4} = dist;
+end
  
+%% Resultats :
+
+[~, order] = sort(cell2mat(LPC_Test(:, 4)));
+Results = LPC_Test(order, :);
+
+

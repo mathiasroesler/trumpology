@@ -1,11 +1,11 @@
-function features = extract_features(mfcc_deltas, pitch_coeffs, energy_coeffs)
-%EXTRACT_FEATURES Extracts the features of a audio signal based on the MFCC
-%and the pitch of the signal.
+function functionals = extract_functionals(mfcc_deltas, pitch_coeffs, energy_coeffs)
+%EXTRACT_FUNCTIONALS Extracts the features of a audio signal based on the MFCC
+%the pitch and the energy of the signal.
 %   Input: -mfcc_deltas, matrix NxMxC, MFCCs for N frames and M
 %           coefficiants with C channels
 %          -pitch_coeffs, vector NxC, pitch for N frames and C channels
 %          -energy_coeffs, vector NxC, energy for N frames
-%   Output: -features, vector Cx(M+7), extracted features from the inputs.
+%   Output: -functionals, vector Cx(M+7), extracted features from the inputs.
 
 channels = size(pitch_coeffs, 2);
 rate_features = zeros(channels, size(mfcc_deltas, 2)+1); % Feature representing the speech rate estimated with the MFCC
@@ -26,6 +26,6 @@ energy_features(:, 1) = mean(energy_coeffs);
 energy_features(:, 2) = var(energy_coeffs);
 energy_features(:, 3) = max(energy_coeffs);
 
-features = [rate_features pitch_features energy_features];
+functionals = [rate_features pitch_features energy_features];
 end
 
