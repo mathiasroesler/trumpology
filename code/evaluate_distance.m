@@ -36,7 +36,7 @@ for corpus_nb = 1:length(corpora)
                 
                 valid_data = extract_data(strcat(dir, '/', set, '/', corpus), coeffs_nb);
                 
-                distance(corpus_nb) = mean(bhattacharyya(train_data, valid_data)); %sqrt(sum((mean(train_data) - mean(valid_data)).^2));
+                distance(corpus_nb) = mean(bhattacharyya(train_data, valid_data)); 
                 
             case 1
                 for person_nb = 1:size(people, 1)
